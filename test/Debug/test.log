@@ -1,3 +1,5 @@
 ﻿C:\Program Files (x86)\Microsoft Visual Studio\2019\Community\MSBuild\Microsoft\VC\v160\Microsoft.CppBuild.targets(519,5): warning MSB8028: The intermediate directory (Debug\) contains files shared from another project (test.vcxproj).  This can lead to incorrect clean and rebuild behavior.
   MessageUclient.cpp
-  test.vcxproj -> C:\dev\MessageUclient\MessageUclient\Debug\MessageUclient.exe
+C:\dev\MessageUclient\MessageU-Client\test\MessageUclient.cpp(133,21): warning C4101: 'toclient': unreferenced local variable
+C:\dev\MessageUclient\MessageU-Client\test\MessageUclient.cpp(169,21): warning C4101: 'Fromclient': unreferenced local variable
+  test.vcxproj -> C:\dev\MessageUclient\MessageU-Client\Debug\MessageUclient.exe

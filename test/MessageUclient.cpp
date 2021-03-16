@@ -5,9 +5,35 @@
 #include <Windows.h>
 #include <conio.h>
 #include <string>
+#include <iostream>
+#include <ctime>
+//#include <unistd.h>
 #include "json.hpp"
 
 using json = nlohmann::json;
+static int myId;
+
+
+std::string gen_random(const int len) {
+
+    std::string tmp_s;
+    static const char alphanum[] =
+        "0123456789"
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
+        "abcdefghijklmnopqrstuvwxyz";
+
+    srand((unsigned)time(NULL) * _getpid());
+
+    tmp_s.reserve(len);
+
+    for (int i = 0; i < len; ++i)
+        tmp_s += alphanum[rand() % (sizeof(alphanum) - 1)];
+
+
+    return tmp_s;
+
+}
+
 
 // MessageUclient.cpp : This file contains the 'main' function. Program execution begins and ends there.
 int main(int argc, char** argv) {    
@@ -27,10 +53,11 @@ int main(int argc, char** argv) {
 
             std::cout << "press your choise: "; // Type a number and press enter
             std::cin >> x; // Get user input from the keyboard
-
+            
             //Register to http://127.0.0.1:8000
             if (x == 1) {
-                //get detail from client 
+                //get detail from client
+                
                 std::string firstName;
                 std::cout << "Type your first name: ";
                 std::cin >> firstName; // get user input from the keyboard
@@ -38,7 +65,8 @@ int main(int argc, char** argv) {
                 
                 //Post http://127.0.0.1:8000/client with firstName and generated public key
 
-                auto publicKey = "key";
+                auto publicKey = gen_random(20);
+
 
                 json request = json::parse("{ \"Name\": \"" + firstName + "\", \"PublicKey\":\"" + publicKey + "\"}");
 
@@ -47,6 +75,23 @@ int main(int argc, char** argv) {
                     cpr::Authentication{ "admin", "admin" },
                     cpr::Body{ request.dump() },
                     cpr::Header{ { "Content-Type", "application/json" } });
+
+
+                
+                auto clients = cpr::Get(
+                    cpr::Url{ "http://127.0.0.1:8000/client/" },
+                    cpr::Authentication{ "admin", "admin" });
+                json j = json::parse(clients.text);
+                json id;
+                for (json::iterator it = j.begin(); it != j.end(); ++it) {
+                    if ((*it)["Name"] == firstName) {
+                        std::cout << (*it)["id"] << '\n';
+                        //std::cout << "test is:\n";
+                        myId = (*it)["id"].get<std::int32_t>();
+                    }
+                }
+                
+
             }
             //http get clients from http://127.0.0.1:8000/client/
             if (x == 2) {
@@ -56,6 +101,7 @@ int main(int argc, char** argv) {
                     cpr::Authentication{ "admin", "admin" });
 
                 json j = json::parse(clients.text);
+
                 for (json::iterator it = j.begin(); it != j.end(); ++it) {
                     std::cout << (*it)["Name"] << '\n';
                 }
@@ -80,30 +126,64 @@ int main(int argc, char** argv) {
                     if ((*it)["id"] == id) {
                         std::cout << (*it)["PublicKey"] << '\n';
                     }
-                }
+                }          
             }
             
             if (x == 4) {
-                std::cout << "All messages from MessageU is :\n";
+                int toclient;
+                std::cout << "All messages of specific user from MessageU is :\n";
+                //std::cout << "\nType your client id:\n";
+                //std::cin >> toclient;
+                std::string toclient2 = std::to_string(myId);
                 auto messages = cpr::Get(
                     cpr::Url{ "http://127.0.0.1:8000/message/" },
                     cpr::Authentication{ "admin", "admin" });
 
                 json j = json::parse(messages.text);
                 for (json::iterator it = j.begin(); it != j.end(); ++it) {
-                    std::cout << (*it)["Blob"] << '\n';
+                    if ((*it)["ToClient"] == toclient2) {
+                        std::cout << (*it)["Blob"] << '\n';
+                    }
+                    
                 }
             }
             //http post public keys from http://127.0.0.1:8000/message/
             if (x == 5) {
-                auto newmessage = cpr::Post(
-                    cpr::Url{ "http://127.0.0.1:8000/message/" },
+                
+                //get detail from client 
+                std::string type = "1";
+                std::string message;
+                std::cout << "Type your message:\n ";
+                std::cin >> message; // get user input from the keyboard
+                std::cout <<  "write the id of the user you want to send to \n";
+
+                auto clients = cpr::Get(
+                    cpr::Url{ "http://127.0.0.1:8000/client/" },
+                    cpr::Authentication{ "admin", "admin" });
+
+                json j = json::parse(clients.text);
+                for (json::iterator it = j.begin(); it != j.end(); ++it) {
+                    std::cout << (*it)["id"] << " " << (*it)["Name"] << '\n';
+                }
+                
+                int Fromclient;
+                int id;
+                std::cout << "\nType client id:\n";
+                std::cin >> id;
+                //std::cout << "\nType your client id:\n";
+                //std::cin >> Fromclient;
+                
+                std::string toClient = std::to_string(id);
+                std::string Fromclient2 = std::to_string(myId);
+                
+                
+
+                json messegarequest = json::parse("{ \"ToClient\": \"" + toClient + "\", \"FromClient\":\"" + Fromclient2 + "\", \"Type\":\"" + type + "\", \"Blob\":\"" + message + "\"}");
+                
+                    cpr::Post(cpr::Url{ "http://127.0.0.1:8000/message/" },
                     cpr::Authentication{ "admin", "admin" },
-                    cpr::Body{ R"({"ToClient": "2" ,"FromClient": "2","Type": "2" ,"Blob": "Hi friend"})" },
-                    cpr::Header{ { "Content-Type", "application/json" } });
-
-                std::cout << newmessage.text << '\n';
-
+                    cpr::Body{ messegarequest.dump() },
+                    cpr::Header{ { "Content-Type", "application/json" } });         
             }
             if (x == 51) {
 
