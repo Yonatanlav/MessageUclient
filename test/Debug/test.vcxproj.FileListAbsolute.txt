@@ -1,0 +1,2 @@
+C:\dev\test\cpr-example\test\test\Debug\test.vcxproj.CopyComplete
+C:\dev\MessageUclient\MessageUclient\test\Debug\test.vcxproj.CopyComplete
